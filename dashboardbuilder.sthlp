@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.2  14jul2026}{...}
+{* *! version 1.2.0  14jul2026}{...}
 {viewerjumpto "Syntax" "dashboardbuilder##syntax"}{...}
 {viewerjumpto "Description" "dashboardbuilder##description"}{...}
 {viewerjumpto "Panel types" "dashboardbuilder##paneltypes"}{...}
@@ -40,7 +40,7 @@ download buttons, themed styling){p_end}
 {opth yti:tle(string)}]
 
 {p 8 16 2}where {it:paneltype} is
-{cmd:kpi} | {cmd:line} | {cmd:bar} | {cmd:hbar} | {cmd:compare} | {cmd:table}
+{cmd:kpi} | {cmd:line} | {cmd:bar} | {cmd:hbar} | {cmd:compare} | {cmd:table} | {cmd:html}
 
 {pstd}Write the HTML file and print the build receipt:{p_end}
 
@@ -106,6 +106,12 @@ selector reference is set, from the reference unit's own rows (see below). All
 rows share one scale, so bar lengths are comparable.{p_end}
 {p2col :{cmd:table}}plain table of {opt vars(varlist)} (default: all
 variables). Renders the first 500 rows; the CSV download has all rows.{p_end}
+{p2col :{cmd:html}}embed an external HTML file named in {opt file(string)} (for
+example a sparkta2 map or any saved interactive chart). The file's
+contents are inlined into an {cmd:<iframe>}, so the dashboard stays one
+self-contained file. Takes no data from memory; use {opt height(#)} to set the
+frame height in pixels (default 520). Static (it does not filter with the
+selector).{p_end}
 {p2colreset}{...}
 
 
@@ -163,6 +169,16 @@ panels are flagged in the receipt.{p_end}
 callout under the title.{p_end}
 {phang}{opth ytitle(string)} value-axis caption shown in the legend area
 (line/bar/hbar/compare).{p_end}
+
+{dlgtab:panel html (extra options)}
+
+{phang}{opth file(string)} path to the HTML file to embed (required for
+{cmd:html} panels). Relative paths resolve against Stata's current working
+directory; the file's contents are inlined into an {cmd:<iframe srcdoc>} at build
+time, so the dashboard stays self-contained. Build the file first (for example a
+sparkta2 map exported with {cmd:offline}), then pass its path here.{p_end}
+{phang}{opt height(#)} iframe height in pixels (default 520). Maps usually want
+more, for example {cmd:height(760)}.{p_end}
 
 {dlgtab:build}
 
@@ -272,6 +288,17 @@ each panel embeds its own snapshot:{p_end}
 {phang2}{cmd:. dashboardbuilder panel line , x(year) y(le_wm le_bm) title("White vs Black men, postwar")}{p_end}
 {phang2}{cmd:. dashboardbuilder build using "lifeexp.html", replace}{p_end}
 
+{pstd}{bf:4. Embed a map (or any HTML)}: build a self-contained HTML with another
+tool, then inline it as an {cmd:html} panel:{p_end}
+
+{phang2}{cmd:. * a sparkta2 choropleth, exported OFFLINE so it is self-contained}{p_end}
+{phang2}{cmd:. sparkta2 readiness, id(fips) geo(texas) type(choropleth) offline noopen export("map.html")}{p_end}
+{phang2}{cmd:. use county_data, clear}{p_end}
+{phang2}{cmd:. dashboardbuilder init , title("County explorer") tx2036}{p_end}
+{phang2}{cmd:. dashboardbuilder panel html , file("map.html") height(760) title("Readiness by county")}{p_end}
+{phang2}{cmd:. dashboardbuilder panel kpi , values(readiness) title("Statewide average")}{p_end}
+{phang2}{cmd:. dashboardbuilder build using "county.html", replace}{p_end}
+
 {pstd}A fuller worked script ships with the package:
 {cmd:example_dashboardbuilder.do}. It builds four dashboards that exercise every
 panel type and most options, and each maps onto a common use case:{p_end}
@@ -287,6 +314,10 @@ between panel calls (example 3 above).{p_end}
 {p2col :{bf:nhanes_bp}}an optional health-survey example (needs internet once for
 {cmd:webuse}); collapsing microdata to group means before charting.{p_end}
 {p2colreset}{...}
+
+{pstd}A second script, {cmd:example_dashboardbuilder_map.do}, is the extended
+example behind {bf:4} above: it builds a sparkta2 Texas county choropleth and
+embeds it in a dashboard via {cmd:panel html} (needs {cmd:sparkta2} installed).{p_end}
 
 
 {marker results}{...}

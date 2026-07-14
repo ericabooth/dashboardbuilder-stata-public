@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.0  14jul2026}{...}
+{* *! version 1.1.2  14jul2026}{...}
 {viewerjumpto "Syntax" "dashboardbuilder##syntax"}{...}
 {viewerjumpto "Description" "dashboardbuilder##description"}{...}
 {viewerjumpto "Panel types" "dashboardbuilder##paneltypes"}{...}
@@ -47,7 +47,7 @@ download buttons, themed styling){p_end}
 {p 8 16 2}
 {cmd:dashboardbuilder} {cmd:build} {cmd:using} {it:filename.html}
 [{cmd:,} {opt replace} {opt nocsv} {opt nopng} {opt notooltip} {opt pdf}
-{opt truepdf} {opth call:out(string)} {opth source:note(string)} {opt open}]
+{opt truepdf} {opth call:out(string)} {opth source:note(string)} {opt noopen}]
 
 {pstd}Utilities:{p_end}
 
@@ -194,12 +194,18 @@ and points the user to Save as PDF) when the library cannot load.{p_end}
 {phang}{opth callout(string)} highlighted note box near the bottom (use for
 "projections are scenarios, not predictions"-style guardrails).{p_end}
 {phang}{opth sourcenote(string)} source citation line in the footer.{p_end}
-{phang}{opt open} open the finished file in the OS default browser as soon as
-the build finishes.{p_end}
+{phang}{opt noopen} do {it:not} auto-open the finished file. By default the
+dashboard opens in your OS default browser as soon as the build finishes (via
+the operating system's own opener: {cmd:open} on macOS, {cmd:start} on Windows,
+{cmd:xdg-open} on Linux). Pass {opt noopen} to suppress that, for example in
+batch runs or loops that build many files at once.{p_end}
 
-{pmore}The build receipt also prints clickable SMCL links {bf:open the
-dashboard} and {bf:show its folder}; you can re-open the last-built dashboard
-any time with {cmd:dashboardbuilder openlast} or {cmd:dashboardbuilder openfolder}.{p_end}
+{pmore}The build receipt also prints two clickable {bf:browse} links {hline 1}
+the finished file and its containing folder {hline 1} whose link text is the
+full path, so a click opens it and you can also copy the path to navigate there
+yourself. Reopen the last-built dashboard any time with
+{cmd:dashboardbuilder openlast}, or open its folder with
+{cmd:dashboardbuilder openfolder}.{p_end}
 
 
 {marker python}{...}
@@ -236,7 +242,8 @@ ran {cmd:python clear} mid-session; run {stata discard} and start again from
 {phang2}{cmd:. dashboardbuilder init , title("Auto quick look")}{p_end}
 {phang2}{cmd:. dashboardbuilder panel bar , x(foreign) y(price) title("Mean price by origin")}{p_end}
 {phang2}{cmd:. dashboardbuilder panel table , title("The numbers")}{p_end}
-{phang2}{cmd:. dashboardbuilder build using "auto_quick.html", replace open}{p_end}
+{phang2}{cmd:. dashboardbuilder build using "auto_quick.html", replace}{p_end}
+{phang2}{it:(the dashboard opens automatically; add }{cmd:noopen}{it: to suppress)}{p_end}
 
 {pstd}{bf:2. Selector + reference unit} (each state vs. a hand-built US row),
 Texas 2036 theme, tabs, downloads:{p_end}
@@ -253,7 +260,7 @@ Texas 2036 theme, tabs, downloads:{p_end}
 {phang2}{cmd:. dashboardbuilder init , title("State explorer") tx2036 selector(state) refvalue("United States")}{p_end}
 {phang2}{cmd:. dashboardbuilder tab , name(today) label("Where states stand")}{p_end}
 {phang2}{cmd:. dashboardbuilder panel kpi , values(pop medage) title("Headline numbers")}{p_end}
-{phang2}{cmd:. dashboardbuilder build using "states.html", replace csv pdf sourcenote("Source: 1980 census extract.")}{p_end}
+{phang2}{cmd:. dashboardbuilder build using "states.html", replace pdf sourcenote("Source: 1980 census extract.")}{p_end}
 
 {pstd}{bf:3. Feeding analytic subsets}: reload/reshape between panel calls;
 each panel embeds its own snapshot:{p_end}

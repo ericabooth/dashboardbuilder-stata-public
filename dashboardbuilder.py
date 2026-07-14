@@ -89,6 +89,32 @@ def _dbb_assemble():
         panels, todo = [], []
         selvalues = set()
         for i in range(1, np + 1):
+            ptype = _dbb_g("DBB_P_%d_TYPE" % i)
+            if ptype == "html":
+                # external-HTML panel: inline the file (e.g. a sparkta2 map) as an
+                # <iframe srcdoc>. There is no JSON snapshot for these.
+                hf = _dbb_g("DBB_P_%d_HTMLFILE" % i)
+                with open(hf, encoding="utf-8") as f:
+                    htmlsrc = f.read()
+                spec = {
+                    "id": "p%d" % i, "type": "html",
+                    "tab": _dbb_g("DBB_P_%d_TAB" % i),
+                    "title": _dbb_g("DBB_P_%d_TITLE" % i),
+                    "note": _dbb_g("DBB_P_%d_NOTE" % i),
+                    "interp": _dbb_g("DBB_P_%d_INTERP" % i),
+                    "ytitle": "", "x": "", "y": [], "ref": "", "selcol": "",
+                    "columns": [], "labels": {}, "rows": [],
+                    "html": htmlsrc,
+                    "height": int(_dbb_g("DBB_P_%d_HEIGHT" % i) or 520),
+                }
+                panels.append(spec)
+                nm = spec["title"] or ("panel %d" % i)
+                if not spec["title"]:
+                    todo.append("panel %d (embedded HTML) has no title() - add one so the card header is not blank" % i)
+                kb = round(len(htmlsrc.encode("utf-8")) / 1024)
+                if kb > 400:
+                    todo.append('"%s" inlines %d KB of external HTML - the dashboard stays one self-contained file but grows; that is expected for an embedded map' % (nm, kb))
+                continue
             with open(os.path.join(d, "panel%d.json" % i), encoding="utf-8") as f:
                 pd = json.load(f)
             spec = {
@@ -379,7 +405,8 @@ function refRowsFor(p){
       // kpi/table are HTML, where a no-library canvas export can't be guaranteed
       // (browsers taint the canvas), so they keep CSV. Edit CHARTPNG to change this.
       const CHARTPNG = new Set(["line","bar","hbar","compare"]);
-      const tools = (M.csv?`<button class="dlbtn" onclick="csvPanel('${p.id}')">&#8623; CSV</button>`:``) +
+      const hasData = p.type!=="html";   // html panels embed a file; no CSV/PNG
+      const tools = (M.csv && hasData?`<button class="dlbtn" onclick="csvPanel('${p.id}')">&#8623; CSV</button>`:``) +
                     (M.png && CHARTPNG.has(p.type)?`<button class="dlbtn" onclick="panelToPng('${p.id}')">&#8623; PNG</button>`:``);
       c.innerHTML =
         (p.title?`<h2>${esc(p.title)}</h2>`:``) +
@@ -555,6 +582,19 @@ function renderTable(p){
   $("draw_"+p.id).innerHTML=html; $("leg_"+p.id).innerHTML="";
 }
 
+// embed an external HTML file (e.g. a sparkta2 map) once, via <iframe srcdoc>.
+// Rendered a single time and skipped on later re-renders, so an interactive map
+// keeps its zoom/selection state when you switch tabs or the selector.
+function renderHtml(p){
+  const host=$("draw_"+p.id);
+  if(host.querySelector("iframe")) return;
+  const f=document.createElement("iframe");
+  f.setAttribute("loading","lazy"); f.setAttribute("title", p.title||"embedded content");
+  f.style.cssText="display:block;width:100%;border:0;height:"+(p.height||520)+"px";
+  f.srcdoc=p.html;                      // full HTML string, set as a property (no escaping needed)
+  host.innerHTML=""; host.appendChild(f);
+}
+
 function renderAll(){
   DASH.tabs.forEach(t=>{ const el=$("tv_"+t.name); if(el) el.classList.toggle("hide", t.name!==state.tab);
     const b=$("tabbtn_"+t.name); if(b) b.classList.toggle("on", t.name===state.tab); });
@@ -564,6 +604,7 @@ function renderAll(){
     else if(p.type==="hbar") renderBarish(p,true);
     else if(p.type==="compare") renderCompare(p);
     else if(p.type==="kpi") renderKpi(p);
+    else if(p.type==="html") renderHtml(p);
     else renderTable(p);
   });
 }

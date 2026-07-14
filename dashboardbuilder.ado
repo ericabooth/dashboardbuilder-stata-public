@@ -1,4 +1,4 @@
-*! version 1.1.0  14jul2026  Eric Booth / Texas 2036 Data & Research
+*! version 1.1.2  14jul2026  Eric Booth / Texas 2036 Data & Research
 *! dashboardbuilder — build a self-contained, interactive HTML dashboard from Stata
 *! ----------------------------------------------------------------------------
 *!  A putdocx-style BUILDER: you call it several times, feeding it one analytic
@@ -9,9 +9,9 @@
 *!
 *!      dashboardbuilder init , title(...) [subtitle() selector() refvalue() tx2036]
 *!      dashboardbuilder tab  , name(...) label(...)
-*!      dashboardbuilder panel <kpi|line|bar|hbar|compare|table> , [options]
+*!      dashboardbuilder panel <kpi|line|bar|hbar|compare|table|html> , [options]
 *!      dashboardbuilder build using file.html [, nocsv nopng notooltip pdf truepdf ///
-*!                                                 callout() sourcenote() replace open]
+*!                                                 callout() sourcenote() replace noopen]
 *!      dashboardbuilder describe | clear | openlast | openfolder
 *!
 *!  ENGINE: Stata orchestrates; Stata's built-in Python integration (PyStata,
@@ -48,8 +48,10 @@ program define dashboardbuilder, rclass
 end
 
 * ═══════════════════════════════════════════════════════════════════════════
-* openpath — open a file (or its containing folder) in the OS default app.
-* Backs the -open- option and the clickable {stata ...} links in the receipt.
+* openpath — auto-open a file in the default app, or its folder in the OS file
+* manager. Backs the auto-open (default; -noopen- suppresses) and the -openlast- /
+* -openfolder- subcommands. The receipt's clickable links are native {browse}
+* directives, so they need no subprogram.
 * ═══════════════════════════════════════════════════════════════════════════
 program define _dbb_openpath
     gettoken path 0 : 0, parse(",")
@@ -59,13 +61,23 @@ program define _dbb_openpath
         di as err "nothing to open yet — run {bf:dashboardbuilder build} first."
         exit 198
     }
-    if "`folder'" != "" {
-        local path = subinstr(`"`path'"', char(92), "/", .)
-        local path = substr(`"`path'"', 1, strrpos(`"`path'"', "/") - 1)
-    }
-    if inlist("`c(os)'", "MacOSX", "Unix") capture shell open `"`path'"'
-    else capture winexec cmd /c start "" `"`path'"'
-    if _rc di as txt `"(could not auto-open; copy this path into a browser:  `path')"'
+    local path = subinstr(`"`path'"', char(92), "/", .)              // forward slashes
+    if "`folder'" != "" local path = substr(`"`path'"', 1, strrpos(`"`path'"', "/") - 1)
+
+    * Open in the OS default app: the browser for an .html file, Finder/Explorer
+    * for a folder. Cross-platform branch mirrors sparkta2_open: macOS -open-,
+    * Windows -start-, Linux -xdg-open- (Linux has no -open-). Plain subprocess
+    * calls with no URL parsing, so they are crash-safe.
+    * IMPORTANT — never hand -view browse- (or a {browse} link) a file:// URL. On
+    * macOS (observed on Stata 19.5 / macOS 26) Stata parses it through
+    * NSURLComponents, which THROWS on a path holding '@' (e.g. a Google Drive
+    * path) and ABORTS Stata. The receipt's clickable links use {browse} on the
+    * RAW path (no file:// scheme, so no authority/userinfo parse), which is safe.
+    local _os = lower("`c(os)'")
+    if      strpos("`_os'", "win") capture winexec cmd /c start "" `"`path'"'
+    else if strpos("`_os'", "mac") capture shell open `"`path'"'
+    else                           capture shell xdg-open `"`path'"' &
+    if _rc di as txt `"(could not auto-open; open this path yourself:  `path')"'
 end
 
 * ═══════════════════════════════════════════════════════════════════════════
@@ -208,12 +220,13 @@ program define _dbb_panel
     _dbb_pysetup
     gettoken ptype 0 : 0, parse(" ,")
     local ptype = lower(`"`ptype'"')
-    if !inlist("`ptype'", "kpi", "line", "bar", "hbar", "compare", "table") {
+    if !inlist("`ptype'", "kpi", "line", "bar", "hbar", "compare", "table", "html") {
         di as err `"panel type "`ptype'" not recognized"'
-        di as err "  valid: kpi | line | bar | hbar | compare | table"
+        di as err "  valid: kpi | line | bar | hbar | compare | table | html"
         exit 198
     }
-    if _N == 0 {
+    * html panels embed an external file (no data), so they skip the data checks
+    if _N == 0 & "`ptype'" != "html" {
         di as err "no observations in memory — load/derive the panel's data first"
         exit 2000
     }
@@ -240,9 +253,12 @@ program define _dbb_panel
         syntax , X(varname) Y(varname numeric) [REF(varname numeric) TAB(name) ///
             TItle(string) NOTE(string) INTERP(string) YTItle(string)]
     }
-    else {                                             // table
+    else if "`ptype'" == "table" {
         syntax [, VARs(varlist) TAB(name) TItle(string) NOTE(string) INTERP(string)]
         if "`vars'" == "" unab vars : _all
+    }
+    else {                                             // html — embed an external file
+        syntax , FIle(string) [TAB(name) TItle(string) NOTE(string) INTERP(string) HEIGHT(integer 520)]
     }
 
     * ---- resolve the tab this panel belongs to (auto-create "main" if none) ----
@@ -258,6 +274,43 @@ program define _dbb_panel
     if !`found' {
         di as err `"tab(`tab') was never declared — run:  dashboardbuilder tab, name(`tab') label("...")"'
         exit 198
+    }
+
+    * ---- html panel: register an external file to inline; no data capture ------
+    if "`ptype'" == "html" {
+        * absolutize the path (Python reads the file at build time; its cwd differs)
+        local hf = subinstr(`"`file'"', char(92), "/", .)
+        if substr(`"`hf'"', 1, 1) != "/" & strpos(`"`hf'"', ":") == 0 {
+            local hf `"`c(pwd)'/`hf'"'
+            local hf = subinstr(`"`hf'"', char(92), "/", .)
+        }
+        capture confirm file `"`hf'"'
+        if _rc {
+            di as err `"panel html: file not found — `hf'"'
+            di as err "  build the HTML first (e.g. a sparkta2 map with export()/offline), then pass its path in file()."
+            exit 601
+        }
+        local k = ${DBB_NPANELS} + 1
+        global DBB_NPANELS        "`k'"
+        global DBB_P_`k'_TYPE     "html"
+        global DBB_P_`k'_TAB      "`tab'"
+        global DBB_P_`k'_TITLE    `"`title'"'
+        global DBB_P_`k'_NOTE     `"`note'"'
+        global DBB_P_`k'_INTERP   `"`interp'"'
+        global DBB_P_`k'_YTITLE   ""
+        global DBB_P_`k'_X        ""
+        global DBB_P_`k'_Y        ""
+        global DBB_P_`k'_REF      ""
+        global DBB_P_`k'_SELCOL   ""
+        global DBB_P_`k'_NROWS    "0"
+        global DBB_P_`k'_XDATE    "0"
+        global DBB_P_`k'_CAPVARS  ""
+        global DBB_P_`k'_HTMLFILE `"`hf'"'
+        global DBB_P_`k'_HEIGHT   "`height'"
+        di as txt `"  panel `k' captured: "' as res "html" ///
+           cond(`"`title'"' != "", `" "`title'""', "") ///
+           as txt `" — inlines `hf' (iframe, `height'px), tab(`tab')"'
+        exit
     }
 
     * ---- assemble capture varlists ----
@@ -362,7 +415,7 @@ program define _dbb_build
     _dbb_require_active
     _dbb_pysetup
     syntax using/ [, replace noCSV noPNG noTOOLtip PDF TRUEpdf ///
-                     CALLout(string) SOURCEnote(string) OPEN]
+                     CALLout(string) SOURCEnote(string) NOOPEN]
     if ${DBB_NPANELS} < 1 {
         di as err "no panels captured — add at least one {bf:dashboardbuilder panel} first"
         exit 198
@@ -440,14 +493,19 @@ program define _dbb_build
         di as txt `"   - ${DBB_R_TODO_`t'}"'
     }
     di as txt "{hline 68}"
-    * clickable links: run subcommands that read ${DBB_R_FILE} (no path-quoting in SMCL)
-    di as txt "  view      : " ///
-       `"{stata dashboardbuilder openlast:▶ open the dashboard}"' as txt "   " ///
-       `"{stata dashboardbuilder openfolder:▶ show its folder}"'
-    di as txt "  path      : " as res `"${DBB_R_FILE}"'
+    * Open + navigate: native SMCL {browse} links. A click opens the file (or the
+    * folder) in the default app; the path is the link text, so it also shows in
+    * the clear to copy. {browse} takes the RAW path, never a file:// URL — a
+    * file:// URL aborts Stata on macOS via NSURLComponents when the path holds
+    * '@' (e.g. a Google Drive path); see _dbb_openpath.
+    local _fw  = subinstr(`"${DBB_R_FILE}"', char(92), "/", .)
+    local _dir = substr(`"`_fw'"', 1, strrpos(`"`_fw'"', "/") - 1)
+    di as txt   "  open      : " as smcl `"{browse `"`_fw'"'}"'
+    di as txt   "  folder    : " as smcl `"{browse `"`_dir'/"'}"'
     di as txt `"  builder state kept — rerun {bf:build} with other options, or {bf:dashboardbuilder clear}."'
 
-    if "`open'" != "" _dbb_openpath `"${DBB_R_FILE}"'
+    * auto-open is ON by default (matches sparkta2); -noopen- suppresses it.
+    if "`noopen'" == "" _dbb_openpath `"${DBB_R_FILE}"'
 end
 
 * ═══════════════════════════════════════════════════════════════════════════

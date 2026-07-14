@@ -28,6 +28,9 @@ dashboardbuilder init , title("Auto quick look") ///
 dashboardbuilder panel bar , x(foreign) y(price) ///
     title("Domestic cars cost less on average") ytitle("mean price (USD)")
 dashboardbuilder panel table , title("The numbers behind the chart")
+* A finished build AUTO-OPENS in your browser by default. This first dashboard
+* shows that; the later three pass -noopen- so running the whole file opens just
+* one tab (every receipt still prints clickable open/folder links either way).
 dashboardbuilder build using "dashboard_examples/auto_quick.html", replace
 
 * r() is populated after build:
@@ -113,9 +116,10 @@ dashboardbuilder describe        // show the registered plan before building
 * CSV + PNG per-panel buttons and hover tooltips are ON by default (all offline-safe).
 * -pdf- adds an offline Save-as-PDF (print) button; -truepdf- adds a one-click PDF
 * button that pulls a JS library from a CDN (so it needs internet — the receipt says so).
-* -open- launches the finished file in your browser.
+* Auto-open is ON by default; -noopen- suppresses it (used here so the demo opens
+* just one tab). Click the open/folder links in the receipt to view it.
 dashboardbuilder build using "dashboard_examples/state_explorer.html", replace ///
-    pdf truepdf open ///
+    pdf truepdf noopen ///
     callout("A teaching example on 1980 census extracts; the point is the layout, not the vintage.") ///
     sourcenote("Source: sysuse census (1980 US census extract shipped with Stata).")
 
@@ -147,7 +151,7 @@ dashboardbuilder panel line , tab(gaps) x(year) y(le_wm le_bm) ///
     title("White vs. Black men, postwar era") ///
     note("Series restricted to 1950 onward at capture time.") ytitle("years at birth")
 
-dashboardbuilder build using "dashboard_examples/lifeexp.html", replace pdf ///
+dashboardbuilder build using "dashboard_examples/lifeexp.html", replace pdf noopen ///
     sourcenote("Source: sysuse uslifeexp (NCHS life tables shipped with Stata).")
 
 
@@ -181,7 +185,7 @@ else {
             title("Men run higher until the oldest groups") ytitle("mean systolic mmHg")
     restore
 
-    dashboardbuilder build using "dashboard_examples/nhanes_bp.html", replace ///
+    dashboardbuilder build using "dashboard_examples/nhanes_bp.html", replace noopen ///
         sourcenote("Source: webuse nhanes2 (NHANES II, 1976-1980).")
 }
 

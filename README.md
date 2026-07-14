@@ -8,7 +8,7 @@ dashboardbuilder init  , title("State explorer") tx2036 selector(state) refvalue
 dashboardbuilder tab   , name(today) label("Where states stand")
 dashboardbuilder panel kpi     , values(pop medage) title("Headline numbers")
 dashboardbuilder panel compare , x(metric) y(v) title("Vital rates vs. the US")
-dashboardbuilder build using "state_explorer.html", replace pdf truepdf open
+dashboardbuilder build using "state_explorer.html", replace pdf truepdf
 ```
 
 The output is deliberately a **starter wireframe**: all data is inline JSON, every chart is readable vanilla SVG/JS with `EDIT-ME` markers, and the Stata **build receipt** tells you what was built and what likely still needs a human pass.
@@ -76,7 +76,7 @@ PDF is opt-in, two flavors:
 - `pdf` — a **Save as PDF** button using the browser's print-to-PDF. Fully offline.
 - `truepdf` — a one-click **Download PDF** button. **Pulls `html2pdf.js` from a CDN**, so that button needs internet and won't work air-gapped (the rest of the dashboard still does); it degrades gracefully with a message when offline.
 
-Opening: `open` launches the file in your browser when the build finishes. The receipt also prints clickable **open the dashboard** / **show its folder** links, and you can re-open the last build any time with `dashboardbuilder openlast` / `dashboardbuilder openfolder`.
+Opening: a finished build **auto-opens in your default browser** (through the OS opener — `open` on macOS, `start` on Windows, `xdg-open` on Linux); pass `noopen` to suppress it, e.g. in batch runs or loops. The receipt also prints two clickable `browse` links — the file and its containing folder — whose link text is the full path, so you can click to open or copy the path to navigate there yourself. Reopen the last build any time with `dashboardbuilder openlast`, or open its folder with `dashboardbuilder openfolder`.
 
 ## The selector (the "choose a county" pattern)
 

@@ -1,4 +1,4 @@
-*! version 1.2.1  14jul2026  Eric Booth / Texas 2036 Data & Research
+*! version 1.3.0  15jul2026  Eric Booth / Texas 2036 Data & Research
 *! dashboardbuilder — build a self-contained, interactive HTML dashboard from Stata
 *! ----------------------------------------------------------------------------
 *!  A putdocx-style BUILDER: you call it several times, feeding it one analytic

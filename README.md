@@ -78,7 +78,7 @@ All types accept `tab() title() note() interp() ytitle()`.
 Self-contained and **on by default** (turn off with the `no*` switches):
 
 - **Per-panel CSV** (`nocsv` to disable) — downloads the panel's rows, filtered to the current selection.
-- **Per-panel PNG** (`nopng` to disable) — on the chart panels (line/bar/hbar/compare), which are SVG and rasterize in-browser with no library. kpi/table are HTML (browsers taint the canvas on HTML→PNG), so they keep CSV.
+- **Per-panel PNG** (`nopng` to disable) — on the chart panels (line/bar/hbar/compare), which are SVG and rasterize in-browser with no library. The image carries the panel's **title, interpretation, legend, and note**, not just the plot, so the chart is self-describing. kpi/table are HTML (browsers taint the canvas on HTML→PNG), so they keep CSV.
 - **Hover tooltips** (`notooltip` to disable) — styled, and **no CDN/library required**.
 
 PDF is opt-in, two flavors:
@@ -101,7 +101,9 @@ dashboardbuilder init , title("State explorer") selector(state) refvalue("United
 
 `selector(state)` adds a dropdown listing every value of `state`. When the reader picks one, each panel re-renders to show only that unit's rows.
 
-**Which panels respond.** A panel filters with the dropdown only when the data you captured for it *contains the selector variable* (here, `state`). Because every `panel` call snapshots whatever is in memory at that moment, you control this per panel: keep the `state` column and the panel is filterable; drop or rename it and the panel stays fixed for everyone (handy for a statewide ranking that should not change with the selection). The build receipt lists any panels that ended up static.
+**Which panels respond.** A panel filters with the dropdown only when the data you captured for it *contains the selector variable* (here, `state`). Because every `panel` call snapshots whatever is in memory at that moment, you control this per panel: keep the `state` column and the panel is filterable; drop or rename it and the panel stays fixed for everyone (handy for a statewide ranking that should not change with the selection).
+
+**The dropdown follows the tabs.** With tabs, the selector is shown only on tabs that have at least one filterable panel, and auto-hidden on tabs where nothing filters — so a "choose a unit" control is never offered where it would do nothing. A fully static tab (for example a cross-unit "Rankings" leaderboard) then reads as a selection-independent overview. The `state_explorer` example uses exactly this: tab 1 ("Where states stand") filters and shows the dropdown; tab 2 ("Rankings") is static and hides it.
 
 **The reference unit.** `refvalue("United States")` marks one value of the selector as a benchmark. That unit is pinned to the top of the dropdown, drawn as a dashed line on `line` panels, and marked with a `|` on `compare` panels, so each selected unit is shown against it. The reference unit is just an ordinary row of data that you build yourself: `collapse` your data down to a national aggregate, then `append` it back with, say, `state = "United States"`. The `state_explorer` dashboard and `help dashboardbuilder` (example 2) show the full recipe.
 

@@ -109,9 +109,14 @@ rename state stname                    // <- different name => panel stays stati
 dashboardbuilder panel hbar , tab(rank) x(stname) y(medage) ///
     title("Ten oldest states by median age") ytitle("median age (years)")
 
-* -- full data table on the rankings tab (filterable again) ------------------
+* -- full leaderboard table, also STATIC. With BOTH Rankings panels static, this
+*    tab is a selection-independent overview, so dashboardbuilder auto-hides the
+*    "choose a state" dropdown while you are on the Rankings tab. --------------
 use `censusplus', clear
+drop if state == "United States"
 keep state region pop medage death_rt marr_rt div_rt
+rename state stname                    // <- static, like the hbar: show all states
+label var stname "State"
 dashboardbuilder panel table , tab(rank) title("Every state, every metric")
 
 dashboardbuilder describe        // show the registered plan before building

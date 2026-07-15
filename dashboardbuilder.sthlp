@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2.1  14jul2026}{...}
+{* *! version 1.3.0  15jul2026}{...}
 {viewerjumpto "Syntax" "dashboardbuilder##syntax"}{...}
 {viewerjumpto "Description" "dashboardbuilder##description"}{...}
 {viewerjumpto "Panel types" "dashboardbuilder##paneltypes"}{...}
@@ -123,7 +123,13 @@ selector).{p_end}
 {cmd:selector(county)}). Any panel whose captured data {it:contains a variable
 with that name} becomes {bf:filterable}: the dashboard gets a dropdown, and
 those panels re-render showing only the rows of the chosen unit. Panels
-without the column stay static (the receipt lists which).
+without the column stay static.
+
+{pstd}
+With tabs, the dropdown is shown only on tabs that have at least one filterable
+panel, and {bf:auto-hidden} on tabs where nothing filters (so a "choose a unit"
+control is never offered where it would do nothing). A tab that is entirely
+static therefore reads as a selection-independent overview.
 
 {pstd}
 {opt refvalue(string)} names one {it:value} of the selector to treat as the
@@ -192,8 +198,10 @@ self-contained (no internet). Turn them off with:}{p_end}
 panel's rows, filtered to the current selection).{p_end}
 {phang}{opt nopng} drop the per-panel PNG download button. PNG appears on the
 chart panels (line/bar/hbar/compare), which are drawn as SVG and rasterized in
-the browser with no library. kpi and table are HTML, where a no-library canvas
-export cannot be guaranteed across browsers, so they show CSV only.{p_end}
+the browser with no library. The exported image carries the panel's {bf:title,
+interpretation, legend, and note}, not just the plot, so the chart is
+self-describing. kpi and table are HTML, where a no-library canvas export cannot
+be guaranteed across browsers, so they show CSV only.{p_end}
 {phang}{opt notooltip} disable the styled hover tooltips (self-contained; they
 need no external library).{p_end}
 

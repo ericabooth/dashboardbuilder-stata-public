@@ -56,15 +56,24 @@ sparkta2 readiness, id(fips) name(county) geo(texas) type(choropleth) ///
     scheme(blues) title("Workforce readiness by county") ///
     offline noopen export("`mapfile'.html")
 
+* A second, BIVARIATE cut of the same data: two variables at once (readiness x
+* income) on a 3x3 color grid. Passing two numeric vars makes sparkta2 default
+* to type(bivariate).
+tempfile bimapfile
+sparkta2 readiness income, id(fips) name(county) geo(texas) ///
+    title("Readiness and income together") ///
+    offline noopen export("`bimapfile'.html")
+
 * ═══════════════════════════════════════════════════════════════════════════
-* 3. Assemble the dashboard: the map on one tab, summary panels on another.
+* 3. Assemble the dashboard: one map per tab, plus summary panels.
 * ═══════════════════════════════════════════════════════════════════════════
 use `counties', clear
 dashboardbuilder init , title("Texas county readiness explorer") ///
-    subtitle("a sparkta2 map embedded inside a dashboardbuilder dashboard (synthetic demo)") ///
+    subtitle("two sparkta2 maps embedded inside a dashboardbuilder dashboard (synthetic demo)") ///
     tx2036
 
-dashboardbuilder tab , name(map)     label("Map")
+dashboardbuilder tab , name(map)     label("Readiness map")
+dashboardbuilder tab , name(bivar)   label("Two-variable map")
 dashboardbuilder tab , name(numbers) label("The numbers")
 
 * -- the MAP: an external sparkta2 HTML file, inlined as an html panel ----------
@@ -72,6 +81,12 @@ dashboardbuilder panel html , tab(map) file("`mapfile'.html") height(760) ///
     title("Readiness index by county") ///
     interp("Darker counties score higher. This is a live sparkta2 D3 map (zoom/hover work) embedded in the card below.") ///
     note("Map drawn by sparkta2 (bundled D3 + Texas geography). Values are synthetic for illustration.")
+
+* -- a SECOND cut: the bivariate map on its own tab ----------------------------
+dashboardbuilder panel html , tab(bivar) file("`bimapfile'.html") height(760) ///
+    title("Two variables at once: readiness x income") ///
+    interp("A bivariate map encodes two variables in one color: each county is shaded by both its readiness and its income at once. The 3x3 legend shows how the two combine (the deepest corner is high on both).") ///
+    note("Bivariate map: sparkta2 (D3). Values are synthetic for illustration.")
 
 * -- statewide KPI tiles (collapse to one row first) ----------------------------
 preserve

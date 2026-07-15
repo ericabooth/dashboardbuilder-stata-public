@@ -58,8 +58,11 @@ label var marr_rt  "Marriages per 1,000"
 label var div_rt   "Divorces per 1,000"
 
 * ---- build the reference row: a synthetic United States aggregate ----------
+* NOTE: do NOT put [aw=pop] on this collapse — Stata would apply the weight to
+* the (sum) totals too and roughly double the US population. Sum the counts
+* plainly; medage is a simple mean of the state medians (fine for a demo row).
 preserve
-    collapse (sum) pop death marriage divorce (mean) medage [aw=pop]
+    collapse (sum) pop death marriage divorce (mean) medage
     gen double death_rt = 1000 * death    / pop
     gen double marr_rt  = 1000 * marriage / pop
     gen double div_rt   = 1000 * divorce  / pop

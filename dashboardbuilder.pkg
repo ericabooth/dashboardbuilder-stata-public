@@ -16,10 +16,11 @@ d
 d Author: Eric Booth, Texas 2036 Data & Research
 d License: MIT
 d Distribution-Date: 20260714
-d Version: 1.2.0
+d Version: 1.2.1
 d
 f dashboardbuilder.ado
 f dashboardbuilder.py
 f dashboardbuilder.sthlp
 f example_dashboardbuilder.do
 f example_dashboardbuilder_map.do
+f texas_counties.csv

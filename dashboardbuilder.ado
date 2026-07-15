@@ -1,4 +1,4 @@
-*! version 1.2.0  14jul2026  Eric Booth / Texas 2036 Data & Research
+*! version 1.2.1  14jul2026  Eric Booth / Texas 2036 Data & Research
 *! dashboardbuilder — build a self-contained, interactive HTML dashboard from Stata
 *! ----------------------------------------------------------------------------
 *!  A putdocx-style BUILDER: you call it several times, feeding it one analytic
@@ -415,7 +415,7 @@ program define _dbb_build
     _dbb_require_active
     _dbb_pysetup
     syntax using/ [, replace noCSV noPNG noTOOLtip PDF TRUEpdf ///
-                     CALLout(string) SOURCEnote(string) NOOPEN]
+                     CALLout(string) SOURCEnote(string) NOOPEN CORNer]
     if ${DBB_NPANELS} < 1 {
         di as err "no panels captured — add at least one {bf:dashboardbuilder panel} first"
         exit 198
@@ -443,6 +443,7 @@ program define _dbb_build
     global DBB_TOOLTIP = cond("`tooltip'" == "notooltip", "0", "1")
     global DBB_PDFDL   = cond("`pdf'"     != "", "1", "0")   // self-contained print-to-PDF button
     global DBB_TRUEPDF = cond("`truepdf'" != "", "1", "0")   // one-click PDF via CDN library
+    global DBB_CORNER  = cond("`corner'"  != "", "1", "0")   // float the PDF button(s) bottom-right
     global DBB_CALLOUT `"`callout'"'
     global DBB_SOURCES `"`sourcenote'"'
     global DBB_PYERR   ""

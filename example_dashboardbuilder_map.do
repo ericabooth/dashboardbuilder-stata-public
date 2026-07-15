@@ -25,16 +25,21 @@ if _rc {
 }
 
 * ═══════════════════════════════════════════════════════════════════════════
-* 1. Synthetic Texas county data (254 counties; real county FIPS 48001..48507).
-*    Swap in your own county-level dataset keyed by 5-digit FIPS to reuse this.
+* 1. County data. Load the 254 real Texas county names + FIPS (shipped next to
+*    this do-file as texas_counties.csv) and attach a synthetic "readiness index"
+*    so the demo has something to show. Swap in your own county dataset keyed by
+*    5-digit FIPS to reuse this pattern with real numbers.
 * ═══════════════════════════════════════════════════════════════════════════
-clear
-set obs 254
-gen long   fips      = 48001 + (_n-1)*2          // 48001, 48003, ... 48507 (odd TX county FIPS)
-gen str    county    = "County " + string(fips)
+capture findfile texas_counties.csv
+if _rc {
+    di as error "texas_counties.csv not found — run this from the package folder"
+    di as error "(the file ships next to example_dashboardbuilder_map.do)."
+    exit 601
+}
+import delimited "`r(fn)'", varnames(1) stringcols(2) clear   // fips (numeric), county (name)
 set seed 2036
-gen double readiness = 45 + 30*runiform()        // made-up 0-100 "readiness index"
-gen double income    = 40000 + 35000*runiform()  // made-up median household income
+gen double readiness = 100*runiform()                 // synthetic 0-100 "readiness index"
+gen double income    = 40000 + 35000*runiform()       // synthetic median household income
 label var readiness "Workforce readiness index (0-100, synthetic)"
 label var income    "Median household income (USD, synthetic)"
 tempfile counties
@@ -76,16 +81,18 @@ preserve
         interp("Averages across all 254 counties in the synthetic dataset.")
 restore
 
-* -- ten highest-readiness counties (static ranking) ----------------------------
+* -- highest-readiness counties (static ranking) --------------------------------
+*    Show 30 (not a handful) so the reader sees the spread across real counties.
 gsort -readiness
-keep in 1/10
+keep in 1/30
 dashboardbuilder panel hbar , tab(numbers) x(county) y(readiness) ///
-    title("Ten highest-readiness counties") ytitle("readiness index (synthetic)")
+    title("Thirty highest-readiness counties") ytitle("readiness index (synthetic)")
 
 * CSV/PNG/tooltips default on; the map panel shows neither (it embeds a file).
+* -corner- floats the Save-as-PDF button in the bottom-right corner.
 * Auto-open is on by default; pass -noopen- to suppress.
 dashboardbuilder build using "dashboard_examples/county_map_dashboard.html", replace ///
-    pdf ///
+    pdf corner ///
     callout("The values here are synthetic; the point of this example is the pattern: build any HTML (here a sparkta2 map) and drop it into a dashboard panel.") ///
     sourcenote("Demo data are synthetic. Map rendered by sparkta2; dashboard by dashboardbuilder (Texas 2036 Data & Research).")
 

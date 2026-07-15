@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2.0  14jul2026}{...}
+{* *! version 1.2.1  14jul2026}{...}
 {viewerjumpto "Syntax" "dashboardbuilder##syntax"}{...}
 {viewerjumpto "Description" "dashboardbuilder##description"}{...}
 {viewerjumpto "Panel types" "dashboardbuilder##paneltypes"}{...}
@@ -47,7 +47,7 @@ download buttons, themed styling){p_end}
 {p 8 16 2}
 {cmd:dashboardbuilder} {cmd:build} {cmd:using} {it:filename.html}
 [{cmd:,} {opt replace} {opt nocsv} {opt nopng} {opt notooltip} {opt pdf}
-{opt truepdf} {opth call:out(string)} {opth source:note(string)} {opt noopen}]
+{opt truepdf} {opt corner} {opth call:out(string)} {opth source:note(string)} {opt noopen}]
 
 {pstd}Utilities:{p_end}
 
@@ -205,6 +205,10 @@ print-to-PDF (controls are hidden by the print stylesheet). Fully offline.{p_end
 button needs internet and will {bf:not} work on an air-gapped machine; the rest
 of the dashboard still works offline. The button degrades gracefully (it alerts
 and points the user to Save as PDF) when the library cannot load.{p_end}
+{phang}{opt corner} float the global PDF button(s) ({bf:Save as PDF} /
+{bf:Download PDF}) as a fixed button in the {bf:bottom-right corner} of the page,
+instead of in the top controls card. Handy when the top of the dashboard is
+busy (for example above a tall embedded map).{p_end}
 
 {pmore}{it:Notes and opening:}{p_end}
 {phang}{opth callout(string)} highlighted note box near the bottom (use for

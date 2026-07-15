@@ -179,6 +179,7 @@ def _dbb_assemble():
             "tooltip": _dbb_g("DBB_TOOLTIP") == "1",
             "pdf": _dbb_g("DBB_PDFDL") == "1",
             "truepdf": _dbb_g("DBB_TRUEPDF") == "1",
+            "corner": _dbb_g("DBB_CORNER") == "1",
             "callout": _dbb_g("DBB_CALLOUT"),
             "sources": _dbb_g("DBB_SOURCES"),
         }
@@ -256,6 +257,10 @@ _DBB_TEMPLATE = r"""<!DOCTYPE html>
                   font:inherit;font-weight:600;cursor:pointer}
   .modebar button.on{background:var(--accent2);color:#fff}
   .cardtools{display:flex;gap:8px;justify-content:flex-end;margin:2px 0 10px}
+  /* corner option: float the global PDF button(s) fixed in the bottom-right */
+  .cornertools{position:fixed;right:18px;bottom:18px;margin:0!important;background:#fff;
+               border:1px solid var(--line);border-radius:10px;padding:8px 10px;
+               box-shadow:0 3px 12px rgba(15,23,42,.18);z-index:50;justify-content:flex-end}
   .dlbtn{background:#fff;color:var(--accent2);border:1px solid var(--line);border-radius:6px;
          padding:6px 12px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
   .dlbtn:hover{background:var(--bg)}
@@ -291,7 +296,7 @@ _DBB_TEMPLATE = r"""<!DOCTYPE html>
          padding:5px 8px;border-radius:5px;opacity:0;transition:opacity .08s;z-index:60;max-width:280px}
   .hide{display:none!important}
   @media print{
-    .cardtools,.dlbtn,.modebar,#selwrap,.toolt{display:none!important}
+    .cardtools,.dlbtn,.modebar,#selwrap,.toolt,.cornertools{display:none!important}
     body,.wrap{background:#fff}
     .card{box-shadow:none;border:1px solid #cbd2dc;break-inside:avoid}
     header,.fill,.refmark,.tile,svg,svg *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -395,6 +400,8 @@ function refRowsFor(p){
       b.innerHTML="&#8623; Download PDF"; b.title="One-click PDF (loads a library from a CDN; needs internet)";
       b.onclick=truePdf; $("globaltools").appendChild(b); }
     $("globaltools").classList.remove("hide");
+    // corner option: pin the PDF button(s) to the bottom-right of the viewport
+    if(M.corner) $("globaltools").classList.add("cornertools");
   }
   // per-tab containers + per-panel cards
   DASH.tabs.forEach(t=>{

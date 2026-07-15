@@ -116,12 +116,7 @@ net install dashboardbuilder, from("https://raw.githubusercontent.com/ericabooth
 help dashboardbuilder
 ```
 
-That copies the command, the help file, and the Python engine (`dashboardbuilder.py`) to your adopath — the same pattern as my other Stata packages at [github.com/ericabooth](https://github.com/ericabooth). To work from a local clone instead, point `from()` at the folder and add it to the adopath:
-
-```stata
-net install dashboardbuilder, from("/path/to/dashboardbuilder-stata-public") replace force
-adopath ++ "/path/to/dashboardbuilder-stata-public"
-```
+That one command copies everything the package needs — the command, the help file, and the Python engine (`dashboardbuilder.py`) — straight to your adopath. There is nothing to add to the adopath by hand and nothing to `pip install`. It is the same one-line pattern as my other Stata packages at [github.com/ericabooth](https://github.com/ericabooth); re-run it any time to update.
 
 Try it:
 

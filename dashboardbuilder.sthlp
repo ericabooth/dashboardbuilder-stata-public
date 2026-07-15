@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.3.0  15jul2026}{...}
+{* *! version 1.3.1  15jul2026}{...}
 {viewerjumpto "Syntax" "dashboardbuilder##syntax"}{...}
 {viewerjumpto "Description" "dashboardbuilder##description"}{...}
 {viewerjumpto "Panel types" "dashboardbuilder##paneltypes"}{...}

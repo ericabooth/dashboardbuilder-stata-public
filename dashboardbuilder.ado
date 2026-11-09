@@ -1,4 +1,4 @@
-*! version 1.3.2  09nov2026  Eric Booth / Texas 2036 Data & Research
+*! version 1.3.3  09nov2026  Eric Booth / Texas 2036 Data & Research
 *! dashboardbuilder — build a self-contained, interactive HTML dashboard from Stata
 *! ----------------------------------------------------------------------------
 *!  A putdocx-style BUILDER: you call it several times, feeding it one analytic
@@ -19,6 +19,11 @@
 *!  Python standard library (json, os). Nothing to pip install, ever.
 *!  See -help dashboardbuilder- for the full story and worked examples.
 *! ----------------------------------------------------------------------------
+*!  1.3.3  09nov2026  a leading ~ in -build using- and -panel html, file()- is
+*!                    expanded from HOME (it became <cwd>/~/...); r(ntabs),
+*!                    r(npanels) and r(bytes) are scalars; the receipt flags a
+*!                    refvalue() that matches no selector value; on Windows the
+*!                    opener hands -start- a backslashed path.
 *!  1.3.2  09nov2026  auto-open, openlast, and openfolder now use macOS -open- on
 *!                    Apple Silicon Macs (c(os) is "Unix" there; was xdg-open),
 *!                    and the opener gets the path in plain double quotes (the
@@ -35,10 +40,10 @@ program define dashboardbuilder, rclass
     else if `"`sub'"' == "panel"    _dbb_panel `0'
     else if `"`sub'"' == "build" {
         _dbb_build `0'
-        return local file    `"${DBB_R_FILE}"'
-        return local ntabs   "${DBB_NTABS}"
-        return local npanels "${DBB_NPANELS}"
-        return local bytes   "${DBB_R_BYTES}"
+        return local  file    `"${DBB_R_FILE}"'
+        return scalar ntabs   = ${DBB_NTABS}
+        return scalar npanels = ${DBB_NPANELS}
+        return scalar bytes   = ${DBB_R_BYTES}
     }
     else if `"`sub'"' == "describe"   _dbb_describe
     else if `"`sub'"' == "clear"      _dbb_clear
@@ -86,6 +91,9 @@ program define _dbb_openpath
     * the rest of the line to the OS shell verbatim, so a compound-quoted path
     * arrives with a literal backtick, /bin/sh reports a syntax error, and
     * nothing opens.
+    * -start- can read a leading /x in a forward-slashed path as a switch, so
+    * Windows gets backslashes (as sparkta2_open does).
+    if strpos("`_os'", "win") local path = subinstr(`"`path'"', "/", char(92), .)
     if      strpos("`_os'", "win") capture winexec cmd /c start "" "`path'"
     else if `_mac'                 capture shell open "`path'"
     else                           capture shell xdg-open "`path'" &
@@ -126,6 +134,31 @@ program define _dbb_pycheck
         di as err `"  . python set exec <path-to-python3>, permanently"'
         exit 198
     }
+end
+
+* tilde — expand a leading ~ from HOME (Windows: USERPROFILE, then
+* HOMEDRIVE+HOMEPATH). Stata's own file commands accept ~, but the path is
+* absolutized here and then opened by Python, which does not.
+program define _dbb_tilde, rclass
+    args p
+    if `"`p'"' == "~" | substr(`"`p'"', 1, 2) == "~/" | substr(`"`p'"', 1, 2) == "~" + char(92) {
+        local home : env HOME
+        if "`c(os)'" == "Windows" {
+            local up : env USERPROFILE
+            if `"`up'"' != "" local home `"`up'"'
+            if `"`home'"' == "" {
+                local hd : env HOMEDRIVE
+                local hp : env HOMEPATH
+                local home `"`hd'`hp'"'
+            }
+        }
+        if `"`home'"' == "" {
+            di as err "cannot expand ~ (HOME is not set)"
+            exit 198
+        }
+        local p `"`home'`=substr(`"`p'"', 2, .)'"'
+    }
+    return local path `"`p'"'
 end
 
 program define _dbb_require_active
@@ -291,7 +324,8 @@ program define _dbb_panel
     * ---- html panel: register an external file to inline; no data capture ------
     if "`ptype'" == "html" {
         * absolutize the path (Python reads the file at build time; its cwd differs)
-        local hf = subinstr(`"`file'"', char(92), "/", .)
+        _dbb_tilde `"`file'"'
+        local hf = subinstr(`"`r(path)'"', char(92), "/", .)
         if substr(`"`hf'"', 1, 1) != "/" & strpos(`"`hf'"', ":") == 0 {
             local hf `"`c(pwd)'/`hf'"'
             local hf = subinstr(`"`hf'"', char(92), "/", .)
@@ -432,7 +466,8 @@ program define _dbb_build
         di as err "no panels captured — add at least one {bf:dashboardbuilder panel} first"
         exit 198
     }
-    local using = subinstr(`"`using'"', char(92), "/", .)
+    _dbb_tilde `"`using'"'
+    local using = subinstr(`"`r(path)'"', char(92), "/", .)
     if strpos(`"`using'"', ".html") == 0 & strpos(`"`using'"', ".htm") == 0 {
         local using `"`using'.html"'
     }

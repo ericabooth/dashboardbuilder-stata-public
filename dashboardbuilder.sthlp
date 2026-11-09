@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.3.2  09nov2026}{...}
+{* *! version 1.3.3  09nov2026}{...}
 {viewerjumpto "Syntax" "dashboardbuilder##syntax"}{...}
 {viewerjumpto "Description" "dashboardbuilder##description"}{...}
 {viewerjumpto "Panel types" "dashboardbuilder##paneltypes"}{...}
@@ -62,8 +62,8 @@ download buttons, themed styling){p_end}
 
 {pstd}
 {cmd:dashboardbuilder} is a {help putdocx}-style {it:builder}: you call it
-several times, then finish. Each {cmd:panel} call snapshots {it:the data
-currently in memory}, so the natural workflow is to load or derive one analytic
+several times, then finish. Each {cmd:panel} call snapshots
+{it:the data currently in memory}, so the natural workflow is to load or derive one analytic
 subset, capture it as a panel, derive the next subset, capture it, and so on.
 {cmd:build} then writes {bf:one self-contained HTML file}: all data embedded as
 inline JSON, all charts drawn by readable vanilla JavaScript/SVG, no internet,
@@ -120,8 +120,8 @@ selector).{p_end}
 
 {pstd}
 {opt selector(name)} on {cmd:init} names a variable (for example
-{cmd:selector(county)}). Any panel whose captured data {it:contains a variable
-with that name} becomes {bf:filterable}: the dashboard gets a dropdown, and
+{cmd:selector(county)}). Any panel whose captured data
+{it:contains a variable with that name} becomes {bf:filterable}: the dashboard gets a dropdown, and
 those panels re-render showing only the rows of the chosen unit. Panels
 without the column stay static.
 
@@ -154,8 +154,10 @@ and the browser tab.{p_end}
 machinery; see {help dashboardbuilder##selector:the selector}.{p_end}
 {phang}{opth sellabel(string)} dropdown label; default "Choose a {it:selector}".{p_end}
 {phang}{opth refvalue(string)} selector value treated as the reference unit.{p_end}
-{phang}{opt tx2036} Texas 2036 branding (navy {cmd:#1B2D55}, orange
-{cmd:#D44500}); shorthand for {cmd:theme(tx2036)}.{p_end}
+{phang}{opt tx2036} the authors' internal Texas 2036 house palette (navy
+{cmd:#1B2D55}, orange {cmd:#D44500}), kept for their own workflows; shorthand
+for {cmd:theme(tx2036)}. It sets colors only (no fonts or logos) and is never
+required.{p_end}
 {phang}{opt theme(simple|tx2036)} color theme; default {cmd:simple}, a neutral
 slate/blue.{p_end}
 
@@ -173,8 +175,9 @@ panels are flagged in the receipt.{p_end}
 {phang}{opth note(string)} small muted text under the chart (source or caveat).{p_end}
 {phang}{opth interp(string)} one-line takeaway shown in an accent-colored
 callout under the title.{p_end}
-{phang}{opth ytitle(string)} value-axis caption shown in the legend area
-(line/bar/hbar/compare).{p_end}
+{phang}{opth ytitle(string)} value-axis caption shown in the legend area.
+Accepted by {cmd:line}, {cmd:bar}, {cmd:hbar} and {cmd:compare} only; the
+other types reject it.{p_end}
 
 {dlgtab:panel html (extra options)}
 
@@ -189,17 +192,19 @@ more, for example {cmd:height(760)}.{p_end}
 {dlgtab:build}
 
 {phang}{cmd:using} {it:filename.html} output path; ".html" is appended if
-missing. Relative paths resolve against Stata's current working directory.{p_end}
+missing. Relative paths resolve against Stata's current working directory, and a
+leading {cmd:~} is expanded from {cmd:HOME} ({cmd:USERPROFILE} on
+Windows).{p_end}
 {phang}{opt replace} overwrite an existing file.{p_end}
 
-{pmore}{it:Per-panel buttons and tooltips are ON by default; all three are fully
-self-contained (no internet). Turn them off with:}{p_end}
+{pmore}{it:Per-panel buttons and tooltips are ON by default; all three are fully}
+{it:self-contained (no internet). Turn them off with:}{p_end}
 {phang}{opt nocsv} drop the per-panel CSV download button (CSV downloads the
 panel's rows, filtered to the current selection).{p_end}
 {phang}{opt nopng} drop the per-panel PNG download button. PNG appears on the
 chart panels (line/bar/hbar/compare), which are drawn as SVG and rasterized in
-the browser with no library. The exported image carries the panel's {bf:title,
-interpretation, legend, and note}, not just the plot, so the chart is
+the browser with no library. The exported image carries the panel's
+{bf:title, interpretation, legend, and note}, not just the plot, so the chart is
 self-describing. kpi and table are HTML, where a no-library canvas export cannot
 be guaranteed across browsers, so they show CSV only.{p_end}
 {phang}{opt notooltip} disable the styled hover tooltips (self-contained; they
@@ -243,8 +248,8 @@ yourself. Reopen the last-built dashboard any time with
 
 {pstd}
 {cmd:dashboardbuilder} uses Stata's built-in Python integration (Stata 16+) for
-JSON serialization and HTML templating. It uses {bf:only the Python standard
-library} ({cmd:json}, {cmd:os}): there is {bf:nothing to pip install}, ever.
+JSON serialization and HTML templating. It uses
+{bf:only the Python standard library} ({cmd:json}, {cmd:os}): there is {bf:nothing to pip install}, ever.
 The only requirement is that Stata can see a Python 3 interpreter.
 
 {pstd}Every {cmd:init} checks this and stops with instructions if not. To set
@@ -276,18 +281,19 @@ ran {cmd:python clear} mid-session; run {stata discard} and start again from
 {phang2}{it:(the dashboard opens automatically; add }{cmd:noopen}{it: to suppress)}{p_end}
 
 {pstd}{bf:2. Selector + reference unit} (each state vs. a hand-built US row),
-Texas 2036 theme, tabs, downloads:{p_end}
+tabs, downloads:{p_end}
 
 {phang2}{cmd:. sysuse census, clear}{p_end}
 {phang2}{cmd:. * build the reference row: a synthetic "United States" aggregate}{p_end}
 {phang2}{cmd:. preserve}{p_end}
-{phang2}{cmd:. collapse (sum) pop death marriage divorce (mean) medage [aw=pop]}{p_end}
+{phang2}{cmd:. * no [aw=pop] here: a weight would also scale the (sum) totals}{p_end}
+{phang2}{cmd:. collapse (sum) pop death marriage divorce (mean) medage}{p_end}
 {phang2}{cmd:. gen state = "United States"}{p_end}
 {phang2}{cmd:. tempfile us}{p_end}
 {phang2}{cmd:. save `us'}{p_end}
 {phang2}{cmd:. restore}{p_end}
 {phang2}{cmd:. append using `us'}{p_end}
-{phang2}{cmd:. dashboardbuilder init , title("State explorer") tx2036 selector(state) refvalue("United States")}{p_end}
+{phang2}{cmd:. dashboardbuilder init , title("State explorer") selector(state) refvalue("United States")}{p_end}
 {phang2}{cmd:. dashboardbuilder tab , name(today) label("Where states stand")}{p_end}
 {phang2}{cmd:. dashboardbuilder panel kpi , values(pop medage) title("Headline numbers")}{p_end}
 {phang2}{cmd:. dashboardbuilder build using "states.html", replace pdf sourcenote("Source: 1980 census extract.")}{p_end}
@@ -308,7 +314,7 @@ tool, then inline it as an {cmd:html} panel:{p_end}
 {phang2}{cmd:. * a sparkta2 choropleth, exported OFFLINE so it is self-contained}{p_end}
 {phang2}{cmd:. sparkta2 readiness, id(fips) geo(texas) type(choropleth) offline noopen export("map.html")}{p_end}
 {phang2}{cmd:. use county_data, clear}{p_end}
-{phang2}{cmd:. dashboardbuilder init , title("County explorer") tx2036}{p_end}
+{phang2}{cmd:. dashboardbuilder init , title("County explorer")}{p_end}
 {phang2}{cmd:. dashboardbuilder panel html , file("map.html") height(760) title("Readiness by county")}{p_end}
 {phang2}{cmd:. dashboardbuilder panel kpi , values(readiness) title("Statewide average")}{p_end}
 {phang2}{cmd:. dashboardbuilder build using "county.html", replace}{p_end}
@@ -339,10 +345,12 @@ embeds it in a dashboard via {cmd:panel html} (needs {cmd:sparkta2} installed).{
 
 {pstd}{cmd:dashboardbuilder build} stores in {cmd:r()}:{p_end}
 {synoptset 12 tabbed}{...}
-{synopt:{cmd:r(file)}}absolute path of the HTML file{p_end}
+{p2col 5 15 19 2: Scalars}{p_end}
 {synopt:{cmd:r(ntabs)}}number of tabs{p_end}
 {synopt:{cmd:r(npanels)}}number of panels{p_end}
 {synopt:{cmd:r(bytes)}}file size in bytes{p_end}
+{p2col 5 15 19 2: Macros}{p_end}
+{synopt:{cmd:r(file)}}absolute path of the HTML file{p_end}
 
 
 {title:Remarks}
@@ -352,12 +360,22 @@ embeds it in a dashboard via {cmd:panel html} (needs {cmd:sparkta2} installed).{
 x variables (convert to year or a labeled string first); panels embedding more
 than 2,000 rows (collapse first); tables over 500 rows; KPI cards with more
 than 6 tiles; bar charts with more than 25 categories; a selector with static
-panels; missing {opt sourcenote()}; no {opt interp()} anywhere.
+panels; a {opt refvalue()} that matches no value of the selector in any panel;
+missing {opt sourcenote()}; no {opt interp()} anywhere.
 
 {pstd}
 {bf:Data stay local}: everything is embedded in the file you write; nothing is
 uploaded anywhere. Anyone you send the file to can read the data out of it, so
 share it as you would share the underlying data.
+
+
+{title:Changes}
+
+{pstd}1.3.3 (09nov2026): a leading {cmd:~} in {cmd:build using} and
+{cmd:panel html, file()} is expanded; {cmd:r(ntabs)}, {cmd:r(npanels)} and
+{cmd:r(bytes)} are scalars; the receipt flags a {opt refvalue()} that matches
+no selector value; on Windows the opener uses a backslashed path; example 2's
+reference row is no longer weighted.{p_end}
 
 
 {title:Author}

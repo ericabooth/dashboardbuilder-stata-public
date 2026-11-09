@@ -7,7 +7,7 @@ d HTML file (inline JSON data, readable vanilla SVG/JS charts, no CDN).
 d Tabs; kpi/line/bar/hbar/compare/table panels plus an html panel that inlines
 d an external HTML file (e.g. a sparkta2 map) as an iframe; a selector dropdown
 d with a reference-unit overlay; per-panel CSV/PNG downloads; save-as-PDF;
-d callout and source notes; Texas 2036 or neutral theming; and a build receipt
+d callout and source notes; neutral or tx2036 house theming; and a build receipt
 d listing what likely still needs a human pass.
 d
 d Requires: Stata 16+ and a Python 3 visible to Stata (standard library
@@ -16,7 +16,7 @@ d
 d Author: Eric A. Booth, Sr Researcher, Texas 2036
 d License: MIT
 d Distribution-Date: 20261109
-d Version: 1.3.2
+d Version: 1.3.3
 d
 f dashboardbuilder.ado
 f dashboardbuilder.py

@@ -1,14 +1,33 @@
 # dashboardbuilder
 
-Build a **self-contained, interactive HTML dashboard from Stata** — tabs, line/bar/bullet charts, KPI tiles, a "choose a unit" selector dropdown with a reference overlay, per-panel CSV and PNG downloads, hover tooltips, an optional save-as-PDF button, callout and source boxes, and Texas 2036 or neutral theming. One command family, one output file, no internet required to view it.
+Build a **self-contained, interactive HTML dashboard from Stata** — tabs, line/bar/bullet charts, KPI tiles, a "choose a unit" selector dropdown with a reference overlay, per-panel CSV and PNG downloads, hover tooltips, an optional save-as-PDF button, callout and source boxes, and a neutral default theme (plus `tx2036`, the authors' internal Texas 2036 house palette, kept for their own workflows; colors only, never required). One command family, one output file, no internet required to view it.
 
 **▶ Live demo gallery:** https://ericabooth.github.io/dashboardbuilder_Example_Site/
 
 ```stata
 sysuse census, clear
-dashboardbuilder init  , title("State explorer") tx2036 selector(state) refvalue("United States")
+gen double death_rt = 1000 * death    / pop
+gen double marr_rt  = 1000 * marriage / pop
+* the reference row: a synthetic "United States" aggregate (no weight on collapse)
+preserve
+    collapse (sum) pop death marriage (mean) medage
+    gen double death_rt = 1000 * death    / pop
+    gen double marr_rt  = 1000 * marriage / pop
+    gen str28 state = "United States"
+    tempfile us
+    save `us'
+restore
+append using `us'
+
+dashboardbuilder init  , title("State explorer") selector(state) refvalue("United States")
 dashboardbuilder tab   , name(today) label("Where states stand")
 dashboardbuilder panel kpi     , values(pop medage) title("Headline numbers")
+* the compare panel wants one row per state x metric
+keep state death_rt marr_rt
+rename (death_rt marr_rt) (v1 v2)
+reshape long v, i(state) j(metric)
+label define metric 1 "Deaths per 1,000" 2 "Marriages per 1,000"
+label values metric metric
 dashboardbuilder panel compare , x(metric) y(v) title("Vital rates vs. the US")
 dashboardbuilder build using "state_explorer.html", replace pdf truepdf
 ```
@@ -71,7 +90,9 @@ Header (title/subtitle) → controls card (selector dropdown + tab bar + PDF but
 | `table` | plain table (first 500 rows; CSV has all) | `[vars()]` |
 | `html` | embed an external HTML file (e.g. a sparkta2 map) as an `<iframe>` panel, inlined so the dashboard stays one self-contained file | `file() [height()]` |
 
-All types accept `tab() title() note() interp() ytitle()`.
+All types accept `tab() title() note() interp()`. `line`, `bar`, `hbar`, and `compare` also accept `ytitle()`; the other types reject it.
+
+`build using` and `panel html, file()` resolve relative paths against Stata's working directory and expand a leading `~` from `HOME` (`USERPROFILE` on Windows). `build` returns `r(file)` and the scalars `r(ntabs)`, `r(npanels)`, and `r(bytes)`.
 
 ## Downloads, tooltips, and opening
 
@@ -138,7 +159,7 @@ do example_dashboardbuilder_map.do    // embeds a sparkta2 map in a dashboard (n
 
 ## What the receipt watches for
 
-Untitled panels; Stata-date x variables; panels embedding >2,000 rows (collapse first); tables >500 rows; KPI cards with >6 tiles; bars with >25 categories; selector declared but some panels static; missing `sourcenote()`; no `interp()` anywhere. Plus fixed reminders: search the file for `EDIT-ME`, and extend `fmtSmart()` for `$`/`%` formatting.
+Untitled panels; Stata-date x variables; panels embedding >2,000 rows (collapse first); tables >500 rows; KPI cards with >6 tiles; bars with >25 categories; selector declared but some panels static; a `refvalue()` that matches no selector value in any panel; missing `sourcenote()`; no `interp()` anywhere. Plus fixed reminders: search the file for `EDIT-ME`, and extend `fmtSmart()` for `$`/`%` formatting.
 
 ## Files
 
@@ -161,8 +182,10 @@ Untitled panels; Stata-date x variables; panels embedding >2,000 rows (collapse 
 
 ## Changes
 
+- 1.3.3 (9 Nov 2026): a leading `~` in `build using` and `panel html, file()` is expanded from `HOME`; it used to become `<cwd>/~/...` and fail. `r(ntabs)`, `r(npanels)`, and `r(bytes)` are now scalars. The receipt flags a `refvalue()` that matches no selector value. On Windows the opener hands `start` a backslashed path. Help fixes: example 2's reference-row `collapse` no longer weights the `(sum)` totals (it doubled the US population), five italic/bold runs that broke across lines now render, `ytitle()` is documented as line/bar/hbar/compare only, and the README quick start runs as written.
+
 - 1.3.2 (9 Nov 2026): auto-open, `openlast`, and `openfolder` now work on Apple Silicon Macs. Stata reports `c(os)` as `Unix` there, so earlier versions called `xdg-open`, which macOS does not have, and nothing opened. The opener also now receives the path in plain double quotes; the earlier compound quotes reached the shell literally, so `open` failed even where `c(os)` was `MacOSX`.
 
 ## License
 
-MIT. © Texas 2036 Data & Research (Eric Booth).
+MIT. Copyright (c) 2026 Eric A. Booth. See `LICENSE`.

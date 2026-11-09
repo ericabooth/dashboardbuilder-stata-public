@@ -165,6 +165,8 @@ def _dbb_assemble():
             if mixed_static:
                 todo.append("selector is on; these panels share a tab with filterable ones but stay static, so they will look unresponsive (rename their %s column only if that is intended): %s"
                             % (sel, "; ".join(mixed_static)))
+        if sel and refval and refval not in selvalues:
+            todo.append('refvalue("%s") matches no value of %s in any panel - check the spelling, or append the reference row before the panel calls' % (refval, sel))
         if not _dbb_g("DBB_SOURCES"):
             todo.append("no sourcenote() given - cite your sources in the footer before sharing")
         if not any(p["interp"] for p in panels):

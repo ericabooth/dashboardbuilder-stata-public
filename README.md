@@ -87,7 +87,7 @@ PDF is opt-in, two flavors:
 - `truepdf` — a one-click **Download PDF** button. **Pulls `html2pdf.js` from a CDN**, so that button needs internet and won't work air-gapped (the rest of the dashboard still does); it degrades gracefully with a message when offline.
 - `corner` — float the PDF button(s) as a fixed button in the **bottom-right corner** of the page instead of the top controls card (handy above a tall embedded map, as in the county-map example above).
 
-Opening: a finished build **auto-opens in your default browser** (through the OS opener — `open` on macOS, `start` on Windows, `xdg-open` on Linux); pass `noopen` to suppress it, e.g. in batch runs or loops. The receipt also prints two clickable `browse` links — the file and its containing folder — whose link text is the full path, so you can click to open or copy the path to navigate there yourself. Reopen the last build any time with `dashboardbuilder openlast`, or open its folder with `dashboardbuilder openfolder`.
+Opening: a finished build **auto-opens in your default browser** (through the OS opener — `open` on macOS, `start` on Windows, `xdg-open` on Linux; macOS is detected from `c(machine_type)` as well as `c(os)`, since Stata reports `c(os)` as `Unix` on Apple Silicon Macs); pass `noopen` to suppress it, e.g. in batch runs or loops. The receipt also prints two clickable `browse` links — the file and its containing folder — whose link text is the full path, so you can click to open or copy the path to navigate there yourself. Reopen the last build any time with `dashboardbuilder openlast`, or open its folder with `dashboardbuilder openfolder`.
 
 ## The selector (the "choose a county" pattern)
 
@@ -158,6 +158,10 @@ Untitled panels; Stata-date x variables; panels embedding >2,000 rows (collapse 
 - Charts are wireframe-grade on purpose: no animations, and the smart number formatter is generic until you tell it about `$` or `%` (search the file for `fmtSmart`). Styled hover tooltips are on by default and need no library.
 - One selector per dashboard; reference overlay applies to `line` and `compare` panels.
 - Roadmap candidates: scatter panels, per-metric formats, a second reference (peer-median) toggle, small-count reliability flags.
+
+## Changes
+
+- 1.3.2 (9 Nov 2026): auto-open, `openlast`, and `openfolder` now work on Apple Silicon Macs. Stata reports `c(os)` as `Unix` there, so earlier versions called `xdg-open`, which macOS does not have, and nothing opened. The opener also now receives the path in plain double quotes; the earlier compound quotes reached the shell literally, so `open` failed even where `c(os)` was `MacOSX`.
 
 ## License
 

@@ -1,4 +1,4 @@
-*! version 1.3.1  15jul2026  Eric Booth / Texas 2036 Data & Research
+*! version 1.3.2  09nov2026  Eric Booth / Texas 2036 Data & Research
 *! dashboardbuilder — build a self-contained, interactive HTML dashboard from Stata
 *! ----------------------------------------------------------------------------
 *!  A putdocx-style BUILDER: you call it several times, feeding it one analytic
@@ -18,6 +18,11 @@
 *!  Stata 16+) does the JSON serialization and HTML templating using ONLY the
 *!  Python standard library (json, os). Nothing to pip install, ever.
 *!  See -help dashboardbuilder- for the full story and worked examples.
+*! ----------------------------------------------------------------------------
+*!  1.3.2  09nov2026  auto-open, openlast, and openfolder now use macOS -open- on
+*!                    Apple Silicon Macs (c(os) is "Unix" there; was xdg-open),
+*!                    and the opener gets the path in plain double quotes (the
+*!                    compound quotes reached /bin/sh literally and failed).
 *! ----------------------------------------------------------------------------
 
 program define dashboardbuilder, rclass
@@ -73,10 +78,17 @@ program define _dbb_openpath
     * NSURLComponents, which THROWS on a path holding '@' (e.g. a Google Drive
     * path) and ABORTS Stata. The receipt's clickable links use {browse} on the
     * RAW path (no file:// scheme, so no authority/userinfo parse), which is safe.
-    local _os = lower("`c(os)'")
-    if      strpos("`_os'", "win") capture winexec cmd /c start "" `"`path'"'
-    else if strpos("`_os'", "mac") capture shell open `"`path'"'
-    else                           capture shell xdg-open `"`path'"' &
+    * macOS check comes from c(machine_type) as well as c(os): on Apple Silicon
+    * Macs Stata reports c(os) == "Unix", and stock macOS has no -xdg-open-.
+    local _os  = lower("`c(os)'")
+    local _mac = (strpos("`_os'", "mac") > 0) | (strpos(lower("`c(machine_type)'"), "mac") > 0)
+    * Plain double quotes around the path, not compound quotes: -shell- hands
+    * the rest of the line to the OS shell verbatim, so a compound-quoted path
+    * arrives with a literal backtick, /bin/sh reports a syntax error, and
+    * nothing opens.
+    if      strpos("`_os'", "win") capture winexec cmd /c start "" "`path'"
+    else if `_mac'                 capture shell open "`path'"
+    else                           capture shell xdg-open "`path'" &
     if _rc di as txt `"(could not auto-open; open this path yourself:  `path')"'
 end
 

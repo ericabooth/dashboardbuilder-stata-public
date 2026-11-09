@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.3.1  15jul2026}{...}
+{* *! version 1.3.2  09nov2026}{...}
 {viewerjumpto "Syntax" "dashboardbuilder##syntax"}{...}
 {viewerjumpto "Description" "dashboardbuilder##description"}{...}
 {viewerjumpto "Panel types" "dashboardbuilder##paneltypes"}{...}
@@ -225,7 +225,9 @@ busy (for example above a tall embedded map).{p_end}
 {phang}{opt noopen} do {it:not} auto-open the finished file. By default the
 dashboard opens in your OS default browser as soon as the build finishes (via
 the operating system's own opener: {cmd:open} on macOS, {cmd:start} on Windows,
-{cmd:xdg-open} on Linux). Pass {opt noopen} to suppress that, for example in
+{cmd:xdg-open} on Linux). macOS is detected from {cmd:c(machine_type)} as well
+as {cmd:c(os)}, because Stata reports {cmd:c(os)} as {cmd:Unix} on Apple Silicon
+Macs. Pass {opt noopen} to suppress that, for example in
 batch runs or loops that build many files at once.{p_end}
 
 {pmore}The build receipt also prints two clickable {bf:browse} links {hline 1}

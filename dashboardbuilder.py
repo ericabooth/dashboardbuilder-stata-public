@@ -165,6 +165,8 @@ def _dbb_assemble():
             if mixed_static:
                 todo.append("selector is on; these panels share a tab with filterable ones but stay static, so they will look unresponsive (rename their %s column only if that is intended): %s"
                             % (sel, "; ".join(mixed_static)))
+        if sel and refval and refval not in selvalues:
+            todo.append('refvalue("%s") matches no value of %s in any panel - check the spelling, or append the reference row before the panel calls' % (refval, sel))
         if not _dbb_g("DBB_SOURCES"):
             todo.append("no sourcenote() given - cite your sources in the footer before sharing")
         if not any(p["interp"] for p in panels):
@@ -368,7 +370,10 @@ function niceAxis(lo, hi){
   const step=[1,2,2.5,5,10].map(m=>m*mag).find(s=>s>=raw*0.999);
   const a=Math.floor(lo/step+1e-9)*step, b=Math.ceil(hi/step-1e-9)*step;
   const ticks=[]; for(let i=0;i<=Math.round((b-a)/step);i++) ticks.push(+(a+i*step).toFixed(10));
-  return {lo:a, hi:b, ticks:ticks};
+  // decimals the step needs (2.5 -> 1, 0.25 -> 2), so a 102.5 gridline is
+  // not labeled 103 by fmtSmart's whole-number rounding above 100
+  let dec=0; while(dec<6 && Math.abs(step*Math.pow(10,dec)-Math.round(step*Math.pow(10,dec)))>1e-9) dec++;
+  return {lo:a, hi:b, ticks:ticks, fmt:v=>(dec>0 && Math.abs(v)<1000)? String(+v.toFixed(dec)) : fmtSmart(v)};
 }
 // X-axis label positions: every point when there are few, otherwise an even
 // stride (preferring one that lands on the last point) with at most 8 labels.
@@ -507,7 +512,7 @@ function renderLine(p){
   let svg=svgOpen(W,H,p.title||"line chart");
   yax.ticks.forEach(tv=>{ const gy=Y(tv);
     svg+=`<line x1="${mL}" y1="${gy}" x2="${W-mR}" y2="${gy}" stroke="#EEF1F6"/>`+
-         `<text x="${mL-8}" y="${gy+4}" text-anchor="end" font-size="11" fill="#6C7A8D">${fmtSmart(tv)}</text>`; });
+         `<text x="${mL-8}" y="${gy+4}" text-anchor="end" font-size="11" fill="#6C7A8D">${yax.fmt(tv)}</text>`; });
   xLabelIdx(xv.length).forEach(i=>{ const v=xv[i];
     svg+=`<text x="${X(v)}" y="${H-10}" text-anchor="middle" font-size="11" fill="#6C7A8D">${esc(String(v))}</text>`; });
   refSeries.forEach(s=>{ let dd=""; s.pts.forEach(pt=>{ dd+=(dd?"L":"M")+X(pt[0])+","+Y(pt[1]); });
@@ -546,7 +551,7 @@ function renderBarish(p, horizontal){
     const bw=(W-mL-mR)/data.length;
     vax.ticks.forEach(tv=>{ const gy=Y(tv);
       svg+=`<line x1="${mL}" y1="${gy}" x2="${W-mR}" y2="${gy}" stroke="#EEF1F6"/>`+
-           `<text x="${mL-8}" y="${gy+4}" text-anchor="end" font-size="11" fill="#6C7A8D">${fmtSmart(tv)}</text>`; });
+           `<text x="${mL-8}" y="${gy+4}" text-anchor="end" font-size="11" fill="#6C7A8D">${vax.fmt(tv)}</text>`; });
     data.forEach((d,i)=>{ const x0=mL+i*bw;
       svg+=`<rect x="${x0+bw*0.12}" y="${Math.min(Y(0),Y(d[1]))}" width="${bw*0.76}" height="${Math.abs(Y(d[1])-Y(0))}" rx="3" fill="${PAL[0]}" data-tip="${tipAttr(d[0]+": "+fmtSmart(d[1]))}"></rect>`+
            `<text x="${x0+bw/2}" y="${H-28}" text-anchor="middle" font-size="11" fill="#334155">${esc(d[0]).slice(0,12)}</text>`+

@@ -165,8 +165,6 @@ def _dbb_assemble():
             if mixed_static:
                 todo.append("selector is on; these panels share a tab with filterable ones but stay static, so they will look unresponsive (rename their %s column only if that is intended): %s"
                             % (sel, "; ".join(mixed_static)))
-        if sel and refval and refval not in selvalues:
-            todo.append('refvalue("%s") matches no value of %s in any panel - check the spelling, or append the reference row before the panel calls' % (refval, sel))
         if not _dbb_g("DBB_SOURCES"):
             todo.append("no sourcenote() given - cite your sources in the footer before sharing")
         if not any(p["interp"] for p in panels):
@@ -363,6 +361,25 @@ function fmtSmart(v){
   if(a>=1) return v.toFixed(1);
   return v.toFixed(2);
 }
+// Round axis gridlines: a 1, 2, 2.5 or 5 x 10^k step giving about five
+// intervals, so tick labels read 95, 100, 105 rather than 91.9, 97.1, 102.
+function niceAxis(lo, hi){
+  const raw=((hi-lo)/5)||1, mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const step=[1,2,2.5,5,10].map(m=>m*mag).find(s=>s>=raw*0.999);
+  const a=Math.floor(lo/step+1e-9)*step, b=Math.ceil(hi/step-1e-9)*step;
+  const ticks=[]; for(let i=0;i<=Math.round((b-a)/step);i++) ticks.push(+(a+i*step).toFixed(10));
+  return {lo:a, hi:b, ticks:ticks};
+}
+// X-axis label positions: every point when there are few, otherwise an even
+// stride (preferring one that lands on the last point) with at most 8 labels.
+function xLabelIdx(n){
+  if(n<=1) return [0];
+  let st=Math.max(1,Math.ceil((n-1)/7));
+  for(let s2=st;s2<=Math.max(st,Math.ceil((n-1)/4));s2++){ if((n-1)%s2===0){ st=s2; break; } }
+  const idx=[]; for(let i=0;i<n;i+=st) idx.push(i);
+  if(idx[idx.length-1]!==n-1){ if((n-1)-idx[idx.length-1] <= st/2) idx.pop(); idx.push(n-1); }
+  return idx;
+}
 function colIdx(p,name){ return p.columns.indexOf(name); }
 function colLab(p,name){ return (p.labels && p.labels[name]) || name; }
 // rows visible for a panel under the current selection
@@ -485,14 +502,14 @@ function renderLine(p){
   if(!allv.length){ $("draw_"+p.id).innerHTML="<p class='note'>No data for this selection.</p>"; return; }
   let ymax=Math.max(...allv), ymin=Math.min(...allv);
   const pad=(ymax-ymin)*.08||1; ymax+=pad; ymin-=pad;
+  const yax=niceAxis(ymin,ymax); ymin=yax.lo; ymax=yax.hi;
   const Y = v => mT+(H-mT-mB)*(1-(v-ymin)/((ymax-ymin)||1));
   let svg=svgOpen(W,H,p.title||"line chart");
-  for(let g=0;g<=4;g++){ const gy=mT+(H-mT-mB)*(1-g/4);
+  yax.ticks.forEach(tv=>{ const gy=Y(tv);
     svg+=`<line x1="${mL}" y1="${gy}" x2="${W-mR}" y2="${gy}" stroke="#EEF1F6"/>`+
-         `<text x="${mL-8}" y="${gy+4}" text-anchor="end" font-size="11" fill="#6C7A8D">${fmtSmart(ymin+(ymax-ymin)*g/4)}</text>`; }
-  const tickN=Math.min(6,xv.length);
-  for(let t=0;t<tickN;t++){ const v=xv[Math.round(t*(xv.length-1)/Math.max(1,tickN-1))];
-    svg+=`<text x="${X(v)}" y="${H-10}" text-anchor="middle" font-size="11" fill="#6C7A8D">${esc(String(v))}</text>`; }
+         `<text x="${mL-8}" y="${gy+4}" text-anchor="end" font-size="11" fill="#6C7A8D">${fmtSmart(tv)}</text>`; });
+  xLabelIdx(xv.length).forEach(i=>{ const v=xv[i];
+    svg+=`<text x="${X(v)}" y="${H-10}" text-anchor="middle" font-size="11" fill="#6C7A8D">${esc(String(v))}</text>`; });
   refSeries.forEach(s=>{ let dd=""; s.pts.forEach(pt=>{ dd+=(dd?"L":"M")+X(pt[0])+","+Y(pt[1]); });
     svg+=`<path d="${dd}" fill="none" stroke="${s.col}" stroke-width="2.2" stroke-dasharray="7 4" opacity=".75"/>`; });
   series.forEach(s=>{ let dd=""; s.pts.forEach(pt=>{ dd+=(dd?"L":"M")+X(pt[0])+","+Y(pt[1]); });
@@ -524,11 +541,12 @@ function renderBarish(p, horizontal){
   } else {
     const W=880,H=300,mL=58,mR=14,mT=12,mB=46;
     let svg=svgOpen(W,H,p.title||"bar chart");
-    const Y=v=>mT+(H-mT-mB)*(1-(v-vmin)/span);
+    const vax=niceAxis(vmin,vmax), vspan=(vax.hi-vax.lo)||1;
+    const Y=v=>mT+(H-mT-mB)*(1-(v-vax.lo)/vspan);
     const bw=(W-mL-mR)/data.length;
-    for(let g=0;g<=4;g++){ const gy=mT+(H-mT-mB)*(1-g/4);
+    vax.ticks.forEach(tv=>{ const gy=Y(tv);
       svg+=`<line x1="${mL}" y1="${gy}" x2="${W-mR}" y2="${gy}" stroke="#EEF1F6"/>`+
-           `<text x="${mL-8}" y="${gy+4}" text-anchor="end" font-size="11" fill="#6C7A8D">${fmtSmart(vmin+span*g/4)}</text>`; }
+           `<text x="${mL-8}" y="${gy+4}" text-anchor="end" font-size="11" fill="#6C7A8D">${fmtSmart(tv)}</text>`; });
     data.forEach((d,i)=>{ const x0=mL+i*bw;
       svg+=`<rect x="${x0+bw*0.12}" y="${Math.min(Y(0),Y(d[1]))}" width="${bw*0.76}" height="${Math.abs(Y(d[1])-Y(0))}" rx="3" fill="${PAL[0]}" data-tip="${tipAttr(d[0]+": "+fmtSmart(d[1]))}"></rect>`+
            `<text x="${x0+bw/2}" y="${H-28}" text-anchor="middle" font-size="11" fill="#334155">${esc(d[0]).slice(0,12)}</text>`+

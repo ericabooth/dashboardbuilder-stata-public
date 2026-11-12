@@ -182,6 +182,7 @@ Untitled panels; Stata-date x variables; panels embedding >2,000 rows (collapse 
 
 ## Changes
 
+- 1.3.4 (12 Nov 2026): line and bar charts use round axis gridlines (95, 100, 105) and label fractional steps exactly; x-axis labels are capped at 8 with the last point always labeled.
 - 1.3.3 (9 Nov 2026): a leading `~` in `build using` and `panel html, file()` is expanded from `HOME`; it used to become `<cwd>/~/...` and fail. `r(ntabs)`, `r(npanels)`, and `r(bytes)` are now scalars. The receipt flags a `refvalue()` that matches no selector value. On Windows the opener hands `start` a backslashed path. Help fixes: example 2's reference-row `collapse` no longer weights the `(sum)` totals (it doubled the US population), five italic/bold runs that broke across lines now render, `ytitle()` is documented as line/bar/hbar/compare only, and the README quick start runs as written.
 
 - 1.3.2 (9 Nov 2026): auto-open, `openlast`, and `openfolder` now work on Apple Silicon Macs. Stata reports `c(os)` as `Unix` there, so earlier versions called `xdg-open`, which macOS does not have, and nothing opened. The opener also now receives the path in plain double quotes; the earlier compound quotes reached the shell literally, so `open` failed even where `c(os)` was `MacOSX`.

@@ -1,4 +1,4 @@
-*! version 1.3.3  09nov2026  Eric Booth / Texas 2036 Data & Research
+*! version 1.3.4  12nov2026  Eric Booth / Texas 2036 Data & Research
 *! dashboardbuilder — build a self-contained, interactive HTML dashboard from Stata
 *! ----------------------------------------------------------------------------
 *!  A putdocx-style BUILDER: you call it several times, feeding it one analytic
@@ -19,6 +19,7 @@
 *!  Python standard library (json, os). Nothing to pip install, ever.
 *!  See -help dashboardbuilder- for the full story and worked examples.
 *! ----------------------------------------------------------------------------
+*!  1.3.4  12nov2026  line and bar charts use round axis gridlines (95, 100, 105) and label fractional steps exactly; x-axis labels are capped at 8 with the last point always labeled.
 *!  1.3.3  09nov2026  a leading ~ in -build using- and -panel html, file()- is
 *!                    expanded from HOME (it became <cwd>/~/...); r(ntabs),
 *!                    r(npanels) and r(bytes) are scalars; the receipt flags a

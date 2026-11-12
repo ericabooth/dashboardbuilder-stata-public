@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.3.3  09nov2026}{...}
+{* *! version 1.3.4  12nov2026}{...}
 {viewerjumpto "Syntax" "dashboardbuilder##syntax"}{...}
 {viewerjumpto "Description" "dashboardbuilder##description"}{...}
 {viewerjumpto "Panel types" "dashboardbuilder##paneltypes"}{...}
@@ -370,6 +370,8 @@ share it as you would share the underlying data.
 
 
 {title:Changes}
+
+{pstd}1.3.4 (12nov2026): line and bar charts use round axis gridlines (95, 100, 105) and label fractional steps exactly; x-axis labels are capped at 8 with the last point always labeled.
 
 {pstd}1.3.3 (09nov2026): a leading {cmd:~} in {cmd:build using} and
 {cmd:panel html, file()} is expanded; {cmd:r(ntabs)}, {cmd:r(npanels)} and

@@ -7,7 +7,8 @@
 *!  self-contained file you can email or drop on a shared drive.
 *!
 *!  Requires: dashboardbuilder + a Python 3 visible to Stata (see -help
-*!            dashboardbuilder-), AND sparkta2 (the map engine we embed).
+*!            dashboardbuilder-), AND sparkta2 (the map engine we embed;
+*!            sparkta2 itself requires Stata 17 or newer).
 *!  Run:      do example_dashboardbuilder_map.do
 *! ----------------------------------------------------------------------------
 version 16
@@ -19,7 +20,7 @@ capture mkdir "dashboard_examples"
 capture which sparkta2
 if _rc {
     di as error "This extended example needs sparkta2 (the map engine). Install it once:"
-    di as error `"  . net install sparkta2, from("https://raw.githubusercontent.com/ericabooth/sparkta2-stata/master/ado/") replace force"'
+    di as error `"  . net install sparkta2, from("https://raw.githubusercontent.com/ericabooth/sparkta2-stata-public/main/") replace force"'
     di as error "Then re-run this do-file. (The other examples do not need sparkta2.)"
     exit
 }
@@ -57,10 +58,9 @@ sparkta2 readiness, id(fips) name(county) geo(texas) type(choropleth) ///
     offline noopen export("`mapfile'.html")
 
 * A second, BIVARIATE cut of the same data: two variables at once (readiness x
-* income) on a 3x3 color grid. Passing two numeric vars makes sparkta2 default
-* to type(bivariate).
+* income) on a 3x3 color grid, requested with type(bivariate).
 tempfile bimapfile
-sparkta2 readiness income, id(fips) name(county) geo(texas) ///
+sparkta2 readiness income, id(fips) name(county) geo(texas) type(bivariate) ///
     title("Readiness and income together") ///
     offline noopen export("`bimapfile'.html")
 

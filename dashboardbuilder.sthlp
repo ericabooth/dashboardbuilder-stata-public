@@ -337,7 +337,8 @@ between panel calls (example 3 above).{p_end}
 
 {pstd}A second script, {cmd:example_dashboardbuilder_map.do}, is the extended
 example behind {bf:4} above: it builds a sparkta2 Texas county choropleth and
-embeds it in a dashboard via {cmd:panel html} (needs {cmd:sparkta2} installed).{p_end}
+embeds it in a dashboard via {cmd:panel html} (needs {cmd:sparkta2} installed,
+which itself requires Stata 17 or newer).{p_end}
 
 
 {marker results}{...}
@@ -382,8 +383,8 @@ reference row is no longer weighted.{p_end}
 
 {title:Author}
 
-{pstd}Eric Booth, Texas 2036 Data & Research.{p_end}
+{pstd}Eric A. Booth, Texas 2036 Data & Research.{p_end}
 {pstd}Contact: {browse "mailto:eric.booth@texas2036.org":eric.booth@texas2036.org}
 or {browse "mailto:eric.a.booth@gmail.com":eric.a.booth@gmail.com}.{p_end}
-{pstd}Inspired by the hand-built "Texas County Explorer" prototype; this tool
-generalizes that layout into a reusable wireframe generator.{p_end}
+{pstd}This tool generalizes a hand-built county-explorer dashboard layout into a
+reusable wireframe generator.{p_end}

@@ -38,7 +38,7 @@ di as txt "built: " as res r(file) as txt " (" r(bytes) " bytes)"
 
 
 * ═══════════════════════════════════════════════════════════════════════════
-* DASHBOARD 2 — the "County Explorer" pattern: selector + reference unit
+* DASHBOARD 2 — the "choose a unit" pattern: selector + reference unit
 *   sysuse census: 50 states. We hand-build a synthetic "United States" row
 *   (population-weighted where appropriate) and declare it the REFERENCE unit.
 *   Every panel whose data carry a variable named -state- becomes filterable;

@@ -305,7 +305,7 @@ each panel embeds its own snapshot:{p_end}
 {phang2}{cmd:. dashboardbuilder init , title("US life expectancy, 1900-1999")}{p_end}
 {phang2}{cmd:. dashboardbuilder panel line , x(year) y(le_male le_female) title("The gap")}{p_end}
 {phang2}{cmd:. keep if year >= 1950}{p_end}
-{phang2}{cmd:. dashboardbuilder panel line , x(year) y(le_wm le_bm) title("White vs Black men, postwar")}{p_end}
+{phang2}{cmd:. dashboardbuilder panel line , x(year) y(le_wmale le_bmale) title("White vs Black men, postwar")}{p_end}
 {phang2}{cmd:. dashboardbuilder build using "lifeexp.html", replace}{p_end}
 
 {pstd}{bf:4. Embed a map (or any HTML)}: build a self-contained HTML with another

@@ -155,7 +155,7 @@ dashboardbuilder panel line , tab(gaps) x(year) y(le_male le_female) ///
     title("The male-female gap opened, then narrowed") ytitle("years at birth")
 
 keep if year >= 1950                     // <- subset feeding: panel captures this
-dashboardbuilder panel line , tab(gaps) x(year) y(le_wm le_bm) ///
+dashboardbuilder panel line , tab(gaps) x(year) y(le_wmale le_bmale) ///
     title("White vs. Black men, postwar era") ///
     note("Series restricted to 1950 onward at capture time.") ytitle("years at birth")
 
